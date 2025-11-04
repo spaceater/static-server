@@ -19,8 +19,14 @@ async function fileExists(filePath) {
   }
 }
 
+function setCacheHeader(res, etag, lastModified) {
+  res.setHeader("ETag", etag);
+  res.setHeader("Last-Modified", lastModified);
+}
+
 module.exports = {
+  supported_image_extensions,
   isImageFile,
   fileExists,
-  supported_image_extensions
+  setCacheHeader
 };

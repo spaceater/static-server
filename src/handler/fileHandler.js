@@ -1,7 +1,8 @@
 const fs = require("fs");
 const fsPromises = require("fs").promises;
 const path = require("path");
-const { checkIfModified, setCacheHeader } = require("../utility/cache");
+const { checkIfModified } = require("../utility/cache");
+const { setCacheHeader } = require("../utility/tools");
 
 const mime = {
   ".css": "text/css",
@@ -32,6 +33,5 @@ async function handleFile(filePath, req, res) {
 }
 
 module.exports = {
-  handleFile,
-  mime
+  handleFile
 };

@@ -12,17 +12,25 @@ function generateStrongETag(stats) {
   const size = stats.size.toString(16);
   const mtime = stats.mtime.getTime().toString(16);
   const etag = `${size}-${mtime}`;
-  return etag;
+  return `"${etag}"`;
 }
 
 function generateWeakETag(stats) {
-  return `W/"${generateStrongETag(stats)}"`;
+  return `W/${generateStrongETag(stats)}`;
 }
 
-async function checkIfModified(req, filePath) {
+async function getEtagAndLastModified(filePath) {
   const stats = await getFileStats(filePath);
   const etag = generateWeakETag(stats);
   const lastModified = stats.mtime.toUTCString();
+  return {
+    etag,
+    lastModified
+  };
+}
+
+async function checkIfModified(req, filePath) {
+  const { etag, lastModified } = await getEtagAndLastModified(filePath);
   const ifNoneMatch = req.headers["if-none-match"];
   const ifModifiedSince = req.headers["if-modified-since"];
   let modified = true;
@@ -42,15 +50,10 @@ async function checkIfModified(req, filePath) {
   };
 }
 
-function setCacheHeader(res, etag, lastModified) {
-  res.setHeader("ETag", etag);
-  res.setHeader("Last-Modified", lastModified);
-}
-
 module.exports = {
   getFileStats,
   generateStrongETag,
   generateWeakETag,
-  checkIfModified,
-  setCacheHeader
+  getEtagAndLastModified,
+  checkIfModified
 };

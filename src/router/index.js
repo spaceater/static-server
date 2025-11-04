@@ -9,7 +9,6 @@ function registerRoutes(app) {
     try {
       const requested_path = req.params[0] || '';
       const file_path = path.join(STATIC_PATH, requested_path);
-      console.log(`file_path: ${file_path}`);
       if (isImageFile(file_path)) {
         if (!(await handleImage(file_path, req, res))) {
           res.status(404).send("ERROR: " + file_path + " not found.");
