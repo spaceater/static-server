@@ -1,10 +1,10 @@
 const path = require("path");
 const fs = require("fs");
 const { STATIC_PATH, TMP_PATH } = require("../../config");
-const { fileExists } = require("../utility/tools");
+const { fileExists, supported_image_extensions } = require("../utility/tools");
 const { convertAndStoreImage } = require("../server/imageConverter");
-
-const supported_image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'];
+const { checkIfModified, setCacheHeader } = require("../utility/cache");
+const { generateTmpPath, validateTmpFile, findTmpFile, deleteTmpFile } = require("../utility/tmpMetadata");
 
 async function handleImage(filePath, req, res) {
   try {
@@ -26,35 +26,65 @@ async function handleImage(filePath, req, res) {
 
     const originalImagePath = path.join(fileDir, fileName + targetExt);
     if (await fileExists(originalImagePath)) {
-      if (contentType) {
-        res.writeHead(200, { "Content-Type": contentType });
+      const cacheResult = await checkIfModified(req, originalImagePath);
+      if (!cacheResult.modified) {
+        res.writeHead(304);
+        res.end();
+        return true;
       }
+      setCacheHeader(res, cacheResult.etag, cacheResult.lastModified);
+      res.writeHead(200, contentType ? { "Content-Type": contentType } : {});
       fs.createReadStream(originalImagePath).pipe(res);
       return true;
     }
 
-    const tmpPath = path.join(TMP_PATH, path.relative(STATIC_PATH, originalImagePath));
-    if (await fileExists(tmpPath)) {
-      if (contentType) {
-        res.writeHead(200, { "Content-Type": contentType });
+    const tmpImagePath = await findTmpFile(originalImagePath, targetExt, STATIC_PATH, TMP_PATH);
+    if (tmpImagePath) {
+      const validation = await validateTmpFile(tmpImagePath, STATIC_PATH, TMP_PATH);
+      if (!validation) {
+        await deleteTmpFile(tmpImagePath);
+      } else {
+        const cacheResult = await checkIfModified(req, tmpImagePath);
+        if (!cacheResult.modified) {
+          res.writeHead(304);
+          res.end();
+          return true;
+        }
+        setCacheHeader(res, cacheResult.etag, cacheResult.lastModified);
+        res.writeHead(200, contentType ? { "Content-Type": contentType } : {});
+        fs.createReadStream(tmpImagePath).pipe(res);
+        return true;
       }
-      fs.createReadStream(tmpPath).pipe(res);
-      return true;
     }
 
     for (const extension of supported_image_extensions) {
       const convertibleImagePath = path.join(fileDir, fileName + extension);
       if (await fileExists(convertibleImagePath)) {
-        if (await convertAndStoreImage(convertibleImagePath, tmpPath, targetExt)) {
-          if (contentType) {
-            res.writeHead(200, { "Content-Type": contentType });
+        const tmpPath = await generateTmpPath(originalImagePath, convertibleImagePath, targetExt, STATIC_PATH, TMP_PATH);
+        if (await fileExists(tmpPath)) {
+          const validation = await validateTmpFile(tmpPath, STATIC_PATH, TMP_PATH);
+          if (!validation) {
+            await deleteTmpFile(tmpPath);
+          } else {
+            const cacheResult = await checkIfModified(req, tmpPath);
+            if (!cacheResult.modified) {
+              res.writeHead(304);
+              res.end();
+              return true;
+            }
+            setCacheHeader(res, cacheResult.etag, cacheResult.lastModified);
+            res.writeHead(200, contentType ? { "Content-Type": contentType } : {});
+            fs.createReadStream(tmpPath).pipe(res);
+            return true;
           }
+        }
+        if (await convertAndStoreImage(convertibleImagePath, tmpPath, targetExt)) {
+          res.writeHead(200, contentType ? { "Content-Type": contentType } : {});
           fs.createReadStream(tmpPath).pipe(res);
           return true;
         }
       }
     }
-
     return false;
   } catch (err) {
     console.error("Error processing image:", err);

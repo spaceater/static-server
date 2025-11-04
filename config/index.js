@@ -6,8 +6,8 @@ const STATIC_PATH = path.resolve(process.env.STATIC_PATH || "./static");
 const TMP_PATH = path.resolve(process.env.TMP_PATH || path.join(STATIC_PATH, "tmp"));
 
 module.exports = {
-  STATIC_PATH,
-  TMP_PATH,
   HOST,
-  PORT
+  PORT,
+  STATIC_PATH,
+  TMP_PATH
 };

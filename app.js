@@ -14,7 +14,7 @@ const server = http.createServer(app);
 app.use(corsMiddleware);
 
 // 设置为静态资源
-app.use(express.static(STATIC_PATH));
+// app.use(express.static(STATIC_PATH));
 
 // 注册路由
 registerRoutes(app);

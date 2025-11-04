@@ -3,8 +3,8 @@
     {
       "name": "static server",
       "script": "app.js",
-      "instances": 1,
-      "exec_mode": "fork",
+      "instances": 8,
+      "exec_mode": "cluster",
       "env": {
         "NODE_ENV": "production",
         "HOST": "127.0.0.1",

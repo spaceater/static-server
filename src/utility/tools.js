@@ -1,9 +1,13 @@
 const path = require("path");
 const fsPromises = require("fs").promises;
 
-function isImageFile(filePath, supportedExtensions) {
+const supported_image_extensions = [
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'
+];
+
+function isImageFile(filePath) {
   const ext = path.extname(filePath).toLowerCase();
-  return supportedExtensions.includes(ext);
+  return supported_image_extensions.includes(ext);
 }
 
 async function fileExists(filePath) {
@@ -17,5 +21,6 @@ async function fileExists(filePath) {
 
 module.exports = {
   isImageFile,
-  fileExists
+  fileExists,
+  supported_image_extensions
 };
