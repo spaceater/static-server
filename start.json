@@ -1,14 +1,14 @@
 {
   "apps": [
     {
-      "name": "static server",
+      "name": "static-server",
       "script": "app.js",
       "instances": 8,
       "exec_mode": "cluster",
       "env": {
         "NODE_ENV": "production",
         "HOST": "127.0.0.1",
-        "PORT": "2999",
+        "PORT": "1999",
         "STATIC_PATH": "../../static/",
         "TMP_PATH": "../../static/tmp"
       }
