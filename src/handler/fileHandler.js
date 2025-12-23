@@ -8,7 +8,8 @@ const mime = {
   ".css": "text/css",
   ".js": "text/javascript",
   ".html": "text/html",
-  ".json": "application/json"
+  ".json": "application/json",
+  ".svg": "image/svg+xml"
 };
 
 async function handleFile(filePath, req, res) {
